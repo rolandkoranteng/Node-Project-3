@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather App</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(to bottom, #4a90e2, #87ceeb);
+        padding: 20px;
+    }
+    
+    .container {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    h2 {
+        color: #333;
+        margin-bottom: 25px;
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+    
+    input[type="text"] {
+        flex: 1;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 15px;
+        outline: none;
+    }
+    
+    input[type="text"]:focus {
+        border-color: #4a90e2;
+    }
+    
+    button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        background: #4a90e2;
+        color: white;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    button:hover {
+        background: #3a7bc8;
+    }
+    
+    .weather-card {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .weather-icon {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .city-name {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 10px 0;
+    }
+    
+    .temperature {
+        font-size: 48px;
+        font-weight: 700;
+        color: #4a90e2;
+        margin: 10px 0;
+    }
+    
+    .description {
+        font-size: 18px;
+        color: #666;
+        text-transform: capitalize;
+        margin-bottom: 20px;
+    }
+    
+    .weather-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        text-align: left;
+    }
+    
+    .detail-item {
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 4px;
+    }
+    
+    .detail-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .error {
+        background: #fee;
+        color: #c33;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Weather App</h2>
+    <div class="search-box">
+        <input type="text" id="cityInput" placeholder="Enter city name" onkeypress="if(event.key==='Enter') getWeather()">
+        <button onclick="getWeather()">Search</button>
+    </div>
+    <div class="result" id="result"></div>
+</div>
+<script>
+async function getWeather() {
+    const city = document.getElementById('cityInput').value.trim();
+    const resultDiv = document.getElementById('result');
+    
+    if (!city) {
+        resultDiv.innerHTML = "<p class='error'>Please enter a city name</p>";
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        
+        if (data.error) {
+            resultDiv.innerHTML = `<p class='error'>${data.error}</p>`;
+        } else {
+            let rainInfo = "No rain";
+            if (data.rain) {
+                rainInfo = data.rain['1h'] ? `${data.rain['1h']} mm` :
+                           data.rain['3h'] ? `${data.rain['3h']} mm` : "N/A";
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="weather-card">
+                    <img class="weather-icon" src="http://openweathermap.org/img/wn/${data.icon}@2x.png" alt="${data.description}">
+                    <div class="city-name">${data.city}</div>
+                    <div class="temperature">${Math.round(data.temperature)}°C</div>
+                    <div class="description">${data.description}</div>
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Humidity</div>
+                            <div class="detail-value">${data.humidity}%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Wind Speed</div>
+                            <div class="detail-value">${data.wind_speed} m/s</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Rain</div>
+                            <div class="detail-value">${rainInfo}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Feels Like</div>
+                            <div class="detail-value">${Math.round(data.temperature)}°C</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        resultDiv.innerHTML = "<p class='error'>Unable to fetch weather data</p>";
+    }
+}
+</script>
+</body>
+</html>
